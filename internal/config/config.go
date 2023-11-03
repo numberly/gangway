@@ -16,21 +16,20 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/kelseyhightower/envconfig"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
+
+const hardCodedDefaultSalt = "MkmfuPNHnZBBivy0L0aW"
 
 // Config the configuration field for gangway
 type Config struct {
-	Host string `yaml:"host"`
-	Port int    `yaml:"port"`
-
+	EnvPrefix              string   `yaml:"-"`
 	ClusterName            string   `yaml:"clusterName" envconfig:"cluster_name"`
-	AuthorizeURL           string   `yaml:"authorizeURL" envconfig:"authorize_url"`
-	TokenURL               string   `yaml:"tokenURL" envconfig:"token_url"`
+	ProviderURL            string   `yaml:"providerURL" envconfig:"provider_url"`
 	ClientID               string   `yaml:"clientID" envconfig:"client_id"`
 	ClientSecret           string   `yaml:"clientSecret" envconfig:"client_secret"`
 	AllowEmptyClientSecret bool     `yaml:"allowEmptyClientSecret" envconfig:"allow_empty_client_secret"`
@@ -39,37 +38,42 @@ type Config struct {
 	Scopes                 []string `yaml:"scopes" envconfig:"scopes"`
 	UsernameClaim          string   `yaml:"usernameClaim" envconfig:"username_claim"`
 	EmailClaim             string   `yaml:"emailClaim" envconfig:"email_claim"`
-	ServeTLS               bool     `yaml:"serveTLS" envconfig:"serve_tls"`
-	CertFile               string   `yaml:"certFile" envconfig:"cert_file"`
-	KeyFile                string   `yaml:"keyFile" envconfig:"key_file"`
 	APIServerURL           string   `yaml:"apiServerURL" envconfig:"apiserver_url"`
 	ClusterCAPath          string   `yaml:"clusterCAPath" envconfig:"cluster_ca_path"`
-	TrustedCAPath          string   `yaml:"trustedCAPath" envconfig:"trusted_ca_path"`
-	HTTPPath               string   `yaml:"httpPath" envconfig:"http_path"`
+	ClusterCA              []byte
+	ShowClaims             bool `yaml:"showClaims" envconfig:"show_claims"`
+}
 
-	SessionSecurityKey     string `yaml:"sessionSecurityKey" envconfig:"SESSION_SECURITY_KEY"`
-	CustomHTMLTemplatesDir string `yaml:"customHTMLTemplatesDir" envconfig:"custom_http_templates_dir"`
+type MultiClusterConfig struct {
+	Host                   string              `yaml:"host"`
+	Port                   int                 `yaml:"port"`
+	Clusters               map[string][]Config `yaml:"clusters"`
+	HTTPPath               string              `yaml:"httpPath" envconfig:"http_path"`
+	SessionSecurityKey     string              `yaml:"sessionSecurityKey" envconfig:"session_security_key"`
+	SessionSalt            string              `yaml:"sessionSalt" envconfig:"session_salt"`
+	CustomHTMLTemplatesDir string              `yaml:"customHTMLTemplatesDir" envconfig:"custom_html_templates_dir"`
+	CustomAssetsDir        string              `yaml:"customAssetsDir" envconfig:"custom_assets_dir"`
+	ServeTLS               bool                `yaml:"serveTLS" envconfig:"serve_tls"`
+	CertFile               string              `yaml:"certFile" envconfig:"cert_file"`
+	KeyFile                string              `yaml:"keyFile" envconfig:"key_file"`
+	TrustedCAPath          string              `yaml:"trustedCAPath" envconfig:"trusted_ca_path"`
+	TrustedCA              []byte
 }
 
 // NewConfig returns a Config struct from serialized config file
-func NewConfig(configFile string) (*Config, error) {
-
-	cfg := &Config{
-		Host:                   "0.0.0.0",
-		Port:                   8080,
-		AllowEmptyClientSecret: false,
-		Scopes:                 []string{"openid", "profile", "email", "offline_access"},
-		UsernameClaim:          "nickname",
-		EmailClaim:             "",
-		ServeTLS:               false,
-		CertFile:               "/etc/gangway/tls/tls.crt",
-		KeyFile:                "/etc/gangway/tls/tls.key",
-		ClusterCAPath:          "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
-		HTTPPath:               "",
+func NewMultiClusterConfig(configFile string) (*MultiClusterConfig, error) {
+	cfg := &MultiClusterConfig{
+		HTTPPath:    "",
+		ServeTLS:    false,
+		CertFile:    "/etc/gangway/tls/tls.crt",
+		KeyFile:     "/etc/gangway/tls/tls.key",
+		SessionSalt: hardCodedDefaultSalt,
+		Host:        "0.0.0.0",
+		Port:        8080,
 	}
 
 	if configFile != "" {
-		data, err := ioutil.ReadFile(configFile)
+		data, err := os.ReadFile(configFile)
 		if err != nil {
 			return nil, err
 		}
@@ -80,19 +84,36 @@ func NewConfig(configFile string) (*Config, error) {
 		}
 	}
 
-	err := envconfig.Process("gangway", cfg)
+	err := envconfig.Process("GANGWAY", cfg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error processing environment variables for prefix %s: %v", "GANGWAY_", err)
 	}
 
-	err = cfg.Validate()
-	if err != nil {
-		return nil, err
+	for env, clusterList := range cfg.Clusters {
+		for i := range clusterList {
+			cluster := &clusterList[i]
+			if cluster.EnvPrefix == "" {
+				cluster.EnvPrefix = fmt.Sprintf("%s_CLUSTER%d_", env, i)
+			}
+			err := envconfig.Process(cluster.EnvPrefix+"GANGWAY", cluster)
+			if err != nil {
+				return nil, fmt.Errorf("error processing environment variables for prefix %s: %v", cluster.EnvPrefix+"GANGWAY_", err)
+			}
+
+			err = cluster.Validate()
+			if err != nil {
+				return nil, err
+			}
+
+			err = loadCerts(cluster, cfg)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	// Check for trailing slash on HTTPPath and remove
 	cfg.HTTPPath = strings.TrimRight(cfg.HTTPPath, "/")
-
 	return cfg, nil
 }
 
@@ -102,12 +123,10 @@ func (cfg *Config) Validate() error {
 		bad    bool
 		errMsg string
 	}{
-		{cfg.AuthorizeURL == "", "no authorizeURL specified"},
-		{cfg.TokenURL == "", "no tokenURL specified"},
+		{cfg.ProviderURL == "", "no providerURL specified"},
 		{cfg.ClientID == "", "no clientID specified"},
 		{cfg.ClientSecret == "" && !cfg.AllowEmptyClientSecret, "no clientSecret specified"},
 		{cfg.RedirectURL == "", "no redirectURL specified"},
-		{cfg.SessionSecurityKey == "", "no SessionSecurityKey specified"},
 		{cfg.APIServerURL == "", "no apiServerURL specified"},
 	}
 
@@ -120,10 +139,30 @@ func (cfg *Config) Validate() error {
 }
 
 // GetRootPathPrefix returns '/' if no prefix is specified, otherwise returns the configured path
-func (cfg *Config) GetRootPathPrefix() string {
-	if len(cfg.HTTPPath) == 0 {
+func (clusterCfg *MultiClusterConfig) GetRootPathPrefix() string {
+	if len(clusterCfg.HTTPPath) == 0 {
 		return "/"
 	}
 
-	return strings.TrimRight(cfg.HTTPPath, "/")
+	return strings.TrimRight(clusterCfg.HTTPPath, "/")
+}
+
+func loadCerts(cfg *Config, clusterCfg *MultiClusterConfig) error {
+	if cfg.ClusterCAPath != "" {
+		clusterCA, err := os.ReadFile(cfg.ClusterCAPath)
+		if err != nil {
+			return err
+		}
+		cfg.ClusterCA = clusterCA
+	}
+
+	if clusterCfg.TrustedCAPath != "" {
+		trustedCA, err := os.ReadFile(clusterCfg.TrustedCAPath)
+		if err != nil {
+			return err
+		}
+		clusterCfg.TrustedCA = trustedCA
+	}
+
+	return nil
 }

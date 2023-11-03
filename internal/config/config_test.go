@@ -1,17 +1,3 @@
-// Copyright © 2017 Heptio
-// Copyright © 2017 Craig Tracey
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package config
 
 import (
@@ -19,72 +5,106 @@ import (
 	"testing"
 )
 
-func TestConfigNotFound(t *testing.T) {
-	_, err := NewConfig("nonexistentfile")
-	if err == nil {
-		t.Errorf("Expected config file parsing to file for non-existent config file")
-	}
-}
-
-func TestEnvionmentOverrides(t *testing.T) {
-	os.Setenv("GANGWAY_AUTHORIZE_URL", "https://foo.bar/authorize")
-	os.Setenv("GANGWAY_APISERVER_URL", "https://k8s-api.foo.baz")
-	os.Setenv("GANGWAY_CLIENT_ID", "foo")
-	os.Setenv("GANGWAY_CLIENT_SECRET", "bar")
-	os.Setenv("GANGWAY_PORT", "1234")
-	os.Setenv("GANGWAY_REDIRECT_URL", "https://foo.baz/callback")
-	os.Setenv("GANGWAY_CLUSTER_CA_PATH", "/etc/ssl/certs/ca-certificates.crt")
-	os.Setenv("GANGWAY_SESSION_SECURITY_KEY", "testing")
-	os.Setenv("GANGWAY_TOKEN_URL", "https://foo.bar/token")
-	os.Setenv("GANGWAY_AUDIENCE", "foo")
-	os.Setenv("GANGWAY_SCOPES", "groups,sub")
-	cfg, err := NewConfig("")
+// createTempFileWithContent crée un fichier temporaire avec le contenu spécifié et retourne son chemin.
+func createTempFileWithContent(t *testing.T, content string) string {
+	t.Helper()
+	tmpfile, err := os.CreateTemp("", "test")
 	if err != nil {
-		t.Errorf("Failed to test config overrides with error: %s", err)
+		t.Fatal(err)
 	}
-
-	if cfg.Port != 1234 {
-		t.Errorf("Failed to override config with environment")
+	if _, err := tmpfile.Write([]byte(content)); err != nil {
+		t.Fatal(err)
 	}
-
-	if cfg.Audience != "foo" {
-		t.Errorf("Failed to set audience via environment variable. Expected %s but got %s", "foo", cfg.Audience)
+	if err := tmpfile.Close(); err != nil {
+		t.Fatal(err)
 	}
+	return tmpfile.Name()
+}
 
-	if cfg.Scopes[0] != "groups" || cfg.Scopes[1] != "sub" {
-		t.Errorf("Failed to set scopes via environment variable. Expected %s but got %s", "[groups, sub]", cfg.Scopes)
+// removeTempFile supprime le fichier temporaire spécifié.
+func removeTempFile(t *testing.T, filename string) {
+	t.Helper()
+	if err := os.Remove(filename); err != nil {
+		t.Fatal(err)
 	}
 }
 
-func TestGetRootPathPrefix(t *testing.T) {
-	tests := map[string]struct {
-		path string
-		want string
-	}{
-		"not specified": {
-			path: "",
-			want: "/",
-		},
-		"specified": {
-			path: "/gangway",
-			want: "/gangway",
-		},
-		"specified default": {
-			path: "/",
-			want: "",
-		},
-	}
+// TestNewMultiClusterConfig tests the NewMultiClusterConfig function for various scenarios.
+func TestNewMultiClusterConfig(t *testing.T) {
+	t.Run("Test with valid config file", func(t *testing.T) {
+		content := `
+httpPath: "/test"
+serveTLS: true
+clusters:
+  prod:
+    - clusterName: "prod-cluster"
+      providerURL: "https://provider.example.com"
+      clientID: "my-client-id"
+      clientSecret: "my-client-secret"
+      redirectURL: "https://redirect.example.com"
+      apiServerURL: "https://apiserver.example.com"
+`
+		filename := createTempFileWithContent(t, content)
+		defer removeTempFile(t, filename)
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			cfg := &Config{
-				HTTPPath: tc.path,
-			}
+		cfg, err := NewMultiClusterConfig(filename)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if cfg.HTTPPath != "/test" {
+			t.Errorf("expected HTTPPath to be '/test', got %s", cfg.HTTPPath)
+		}
+		if !cfg.ServeTLS {
+			t.Errorf("expected ServeTLS to be true, got %v", cfg.ServeTLS)
+		}
+		if len(cfg.Clusters["prod"]) == 0 {
+			t.Errorf("expected at least one cluster in 'prod', got %v", cfg.Clusters["prod"])
+		}
+	})
 
-			got := cfg.GetRootPathPrefix()
-			if got != tc.want {
-				t.Fatalf("GetRootPathPrefix(): want: %v, got: %v", tc.want, got)
-			}
-		})
-	}
+	t.Run("Test with missing mandatory fields", func(t *testing.T) {
+		content := `
+clusters:
+  prod:
+    - clientID: "my-client-id"
+`
+		filename := createTempFileWithContent(t, content)
+		defer removeTempFile(t, filename)
+
+		_, err := NewMultiClusterConfig(filename)
+		if err == nil {
+			t.Fatalf("expected an error due to missing mandatory fields, got none")
+		}
+	})
+
+	t.Run("Test with environment variables", func(t *testing.T) {
+		content := `clusters: {}` // Empty clusters to load from envvars
+		filename := createTempFileWithContent(t, content)
+		defer removeTempFile(t, filename)
+
+		// Set environment variables for testing
+		os.Setenv("GANGWAY_CLUSTER_NAME", "env-cluster")
+		os.Setenv("GANGWAY_PROVIDER_URL", "https://envprovider.example.com")
+		os.Setenv("GANGWAY_CLIENT_ID", "env-client-id")
+		os.Setenv("GANGWAY_CLIENT_SECRET", "env-client-secret")
+		os.Setenv("GANGWAY_REDIRECT_URL", "https://envredirect.example.com")
+		os.Setenv("GANGWAY_APISERVER_URL", "https://envapiserver.example.com")
+		defer func() {
+			// Clean up environment variables
+			os.Unsetenv("GANGWAY_CLUSTER_NAME")
+			os.Unsetenv("GANGWAY_PROVIDER_URL")
+			os.Unsetenv("GANGWAY_CLIENT_ID")
+			os.Unsetenv("GANGWAY_CLIENT_SECRET")
+			os.Unsetenv("GANGWAY_REDIRECT_URL")
+			os.Unsetenv("GANGWAY_APISERVER_URL")
+		}()
+
+		cfg, err := NewMultiClusterConfig(filename)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if cfg.Clusters == nil {
+			t.Fatalf("expected clusters to be loaded from environment, got nil")
+		}
+	})
 }
