@@ -1,17 +1,24 @@
+# Welcome to Numberly/Gangway a new fork with multi-cluster improvements
+
+... which was EOL-ed by VMware. See https://github.com/vmware-archive/gangway for the original.
+
+This fork aims to continue development of Gangway by Numberly corporation.
 
 gangway
-[![Build Status](https://travis-ci.org/heptiolabs/gangway.svg?branch=master)](https://travis-ci.org/heptiolabs/gangway)
 =======
-
-# VMware has ended active development of this project, this repository will no longer be updated.
 
 _(noun): An opening in the bulwark of the ship to allow passengers to board or leave the ship._
 
 An application that can be used to easily enable authentication flows via OIDC for a kubernetes cluster.
 Kubernetes supports [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens) as a way to identify users who access the cluster.
+Gangway has been improved and is now able to handle multiple clusters
 Gangway allows users to self-configure their `kubectl` configuration in a few short steps.
 
-![gangway screenshot](docs/images/screenshot.png)
+![gangway multicluster](docs/images/gangway-multicluster.png)
+
+Once authenticated for one of your cluster : 
+
+![gangway](docs/images/screenshot.png)
 
 ## Deployment
 
@@ -64,16 +71,15 @@ kube-apiserver
 
 Requirements for building
 
-- Go (built with version >= 1.12)
-- [esc](https://github.com/mjibson/esc) for static resources.
+- Go (built with version >= 1.21)
 
 A Makefile is provided for building tasks. The options are as follows
 
 Getting started is as simple as:
 
 ```bash
-go get -u github.com/heptiolabs/gangway
-cd $GOPATH/src/github.com/heptiolabs/gangway
+go get -u github.com/soulkyu/gangway
+cd $GOPATH/src/github.com/soulkyu/gangway
 make setup
 make
 ```
