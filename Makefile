@@ -14,41 +14,36 @@
 
 PROJECT := gangway
 # Where to push the docker image.
-REGISTRY ?= gcr.io/heptio-images
+REGISTRY ?= numberly
 IMAGE := $(REGISTRY)/$(PROJECT)
 SRCDIRS := ./cmd/gangway
-PKGS := $(shell go list ./cmd/... ./internal/...)
 
 VERSION ?= master
 
 all: build
 
-build: deps bindata
+build: deps
 	go build ./...
 
 install:
 	go install -v ./cmd/gangway/...
 
 setup:
-	go get -u github.com/mjibson/esc/...
+	curl -s -o assets/prism-core.min.js https://raw.githubusercontent.com/PrismJS/prism/v1.28.0/components/prism-core.min.js
+	curl -s -o assets/prism-bash.min.js https://raw.githubusercontent.com/PrismJS/prism/v1.28.0/components/prism-bash.min.js
+	curl -s -o assets/prism-yaml.min.js https://raw.githubusercontent.com/PrismJS/prism/v1.28.0/components/prism-yaml.min.js
+	curl -s -o assets/prism-powershell.min.js https://raw.githubusercontent.com/PrismJS/prism/v1.28.0/components/prism-powershell.min.js
+	curl -s -o assets/prism-tomorrow.min.css https://raw.githubusercontent.com/PrismJS/prism/v1.28.0/themes/prism-tomorrow.min.css
+	curl -s -o assets/materialize.min.css https://raw.githubusercontent.com/Dogfalo/materialize/v1-dev/dist/css/materialize.min.css
+	curl -s -o assets/materialize.min.js https://raw.githubusercontent.com/Dogfalo/materialize/v1-dev/dist/js/materialize.min.js
 
-check: test vet gofmt staticcheck misspell
+check: test lint gofmt misspell
 
 deps:
-	GO111MODULE=on go mod tidy && GO111MODULE=on go mod vendor && GO111MODULE=on go mod verify
-
-vet: | test
-	go vet ./...
-
-bindata:
-	esc -o cmd/gangway/bindata.go templates/
+	go mod tidy && go mod vendor && go mod verify
 
 test:
 	go test -v ./...
-
-staticcheck:
-	@go get honnef.co/go/tools/cmd/staticcheck
-	staticcheck $(PKGS)
 
 misspell:
 	@go get github.com/client9/misspell/cmd/misspell
@@ -68,4 +63,4 @@ image:
 push:
 	docker push $(IMAGE):$(VERSION)
 
-.PHONY: all deps bindata test image setup
+.PHONY: all deps test image
