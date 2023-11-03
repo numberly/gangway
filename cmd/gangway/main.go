@@ -25,19 +25,26 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/heptiolabs/gangway/internal/config"
-	"github.com/heptiolabs/gangway/internal/oidc"
-	"github.com/heptiolabs/gangway/internal/session"
-	"github.com/justinas/alice"
+	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/gorilla/sessions"
+	"github.com/numberly/gangway/assets"
+	"github.com/numberly/gangway/internal/config"
+	"github.com/numberly/gangway/internal/session"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
+var clusterCfg *config.MultiClusterConfig
 var cfg *config.Config
 var oauth2Cfg *oauth2.Config
-var o2token oidc.OAuth2Token
-var gangwayUserSession *session.Session
+
+var store *sessions.CookieStore
+
+var sessionManager *session.Session
+
 var transportConfig *config.TransportConfig
+var provider *oidc.Provider
+var verifier *oidc.IDTokenVerifier
 
 // wrapper function for http logging
 func httpLogger(fn http.HandlerFunc) http.HandlerFunc {
@@ -47,47 +54,55 @@ func httpLogger(fn http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+func rootPathHandler(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// The "/" pattern matches everything, so we need to check
+		// that we're at the root here.
+		if clusterCfg.HTTPPath == "" && r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		fn(w, r)
+	}
+}
+
 func main() {
-	cfgFile := flag.String("config", "", "The config file to use.")
+	clusterCfgile := flag.String("config", "", "The config file to use.")
 	flag.Parse()
 
 	var err error
-	cfg, err = config.NewConfig(*cfgFile)
+	clusterCfg, err = config.NewMultiClusterConfig(*clusterCfgile)
 	if err != nil {
 		log.Errorf("Could not parse config file: %s", err)
 		os.Exit(1)
 	}
 
-	oauth2Cfg = &oauth2.Config{
-		ClientID:     cfg.ClientID,
-		ClientSecret: cfg.ClientSecret,
-		RedirectURL:  cfg.RedirectURL,
-		Scopes:       cfg.Scopes,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  cfg.AuthorizeURL,
-			TokenURL: cfg.TokenURL,
-		},
+	transportConfig = config.NewTransportConfig(clusterCfg.TrustedCA)
+
+	var assetFs http.FileSystem
+	if clusterCfg.CustomAssetsDir != "" {
+		assetFs = http.Dir("clusterCfg.CustomAssetsDir")
+	} else {
+		assetFs = http.FS(assets.FS)
 	}
 
-	o2token = &oidc.Token{
-		OAuth2Cfg: oauth2Cfg,
-	}
+	store = sessions.NewCookieStore([]byte(clusterCfg.SessionSecurityKey))
+	sessionManager = session.New(clusterCfg.SessionSecurityKey, clusterCfg.SessionSalt)
 
-	transportConfig = config.NewTransportConfig(cfg.TrustedCAPath)
-	gangwayUserSession = session.New(cfg.SessionSecurityKey)
-
-	loginRequiredHandlers := alice.New(loginRequired)
-
-	http.HandleFunc(cfg.GetRootPathPrefix(), httpLogger(homeHandler))
-	http.HandleFunc(fmt.Sprintf("%s/login", cfg.HTTPPath), httpLogger(loginHandler))
-	http.HandleFunc(fmt.Sprintf("%s/callback", cfg.HTTPPath), httpLogger(callbackHandler))
+	http.HandleFunc(clusterCfg.GetRootPathPrefix(), httpLogger(rootPathHandler(clustersHome)))
+	http.HandleFunc(fmt.Sprintf("%s/login", clusterCfg.HTTPPath), httpLogger(loginHandler))
+	http.HandleFunc(fmt.Sprintf("%s/callback", clusterCfg.HTTPPath), httpLogger(callbackHandler))
 
 	// middleware'd routes
-	http.Handle(fmt.Sprintf("%s/logout", cfg.HTTPPath), loginRequiredHandlers.ThenFunc(logoutHandler))
-	http.Handle(fmt.Sprintf("%s/commandline", cfg.HTTPPath), loginRequiredHandlers.ThenFunc(commandlineHandler))
-	http.Handle(fmt.Sprintf("%s/kubeconf", cfg.HTTPPath), loginRequiredHandlers.ThenFunc(kubeConfigHandler))
+	http.Handle(fmt.Sprintf("%s/logout", clusterCfg.HTTPPath), loginRequired(http.HandlerFunc(logoutHandler)))
+	http.Handle(fmt.Sprintf("%s/commandline", clusterCfg.HTTPPath), loginRequired(http.HandlerFunc(commandlineHandler)))
+	http.Handle(fmt.Sprintf("%s/kubeconf", clusterCfg.HTTPPath), loginRequired(http.HandlerFunc(kubeConfigHandler)))
 
-	bindAddr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+	// assets
+	assetsPath := fmt.Sprintf("%s/assets/", clusterCfg.HTTPPath)
+	http.Handle(assetsPath, http.StripPrefix(assetsPath, http.FileServer(assetFs)))
+
+	bindAddr := fmt.Sprintf("%s:%d", clusterCfg.Host, clusterCfg.Port)
 	// create http server with timeouts
 	httpServer := &http.Server{
 		Addr:         bindAddr,
@@ -95,32 +110,35 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	if cfg.ServeTLS {
+	if clusterCfg.ServeTLS {
 		// update http server with TLS config
 		httpServer.TLSConfig = &tls.Config{
+			MinVersion: tls.VersionTLS12, // minimum TLS 1.2
+			// P curve order does not matter, as breaking one means all others can be brute-forced as well:
+			// Golang developers prefer:
+			CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384, tls.CurveP521},
 			CipherSuites: []uint16{
-				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
 				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-				tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
-				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_CHACHA20_POLY1305_SHA256, // TLS 1.3
+				tls.TLS_AES_256_GCM_SHA384,       // TLS 1.3
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_AES_128_GCM_SHA256, // TLS 1.3
 			},
-			PreferServerCipherSuites: true,
-			MinVersion:               tls.VersionTLS12,
 		}
 	}
 
 	// start up the http server
 	go func() {
 		log.Infof("Gangway started! Listening on: %s", bindAddr)
-
 		// exit with FATAL logging why we could not start
 		// example: FATA[0000] listen tcp 0.0.0.0:8080: bind: address already in use
-		if cfg.ServeTLS {
-			log.Fatal(httpServer.ListenAndServeTLS(cfg.CertFile, cfg.KeyFile))
+		if clusterCfg.ServeTLS {
+			log.Fatal(httpServer.ListenAndServeTLS(clusterCfg.CertFile, clusterCfg.KeyFile))
 		} else {
 			log.Fatal(httpServer.ListenAndServe())
 		}
@@ -133,5 +151,5 @@ func main() {
 
 	log.Println("Shutdown signal received, exiting.")
 	// close the HTTP server
-	httpServer.Shutdown(context.Background())
+	_ = httpServer.Shutdown(context.Background())
 }
