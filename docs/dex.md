@@ -46,7 +46,7 @@ An example of the OpenID Configuration provided by Dex:
  }
  ```
 
- Using the Gangway example Dex's `authorization_endpoint` can be used for `authorize_url` and `token_endpoint` can be used for `token_url`.
- The Dex configuration provides a list named `claims_supported` which can be chosen from when defining both `username_claim` and `email_claim`.
- The correct claim to use depends on the upstream identity provider that dex is configured for.
+ Using the Gangway example, just provide your Dex installation as provider. The Dex configuration provides a list 
+ named `claims_supported` which can be chosen from when defining both `username_claim` and `email_claim`.
+ The correct claim to use depends on the upstream identity provider that dex is configured for. 
  `client_id` and `client_secret` are strings that can be any value, but they must match the Client ID and Secret in your Dex configuration.
