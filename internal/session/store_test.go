@@ -15,14 +15,15 @@ package session
 
 import (
 	"fmt"
-	"github.com/gorilla/sessions"
-	log "github.com/sirupsen/logrus"
 	"math"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/gorilla/sessions"
+	log "github.com/sirupsen/logrus"
 )
 
 func TestJoinSectionCookies(t *testing.T) {
