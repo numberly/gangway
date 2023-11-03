@@ -3,6 +3,6 @@
 config.yml
 /gangway
 vendor/
-cmd/gangway/bindata.go
 .idea/
 gangway.kubeconfig
+deploy/
