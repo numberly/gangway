@@ -29,16 +29,8 @@ Here is a typical config file:
 # Your Cluster Name. There's no strict mapping, so it can be anything
 clusterName: "your_cluster_name"
 
-# The URL to send authorize requests to
-# leave as is unless Google instructs you otherwise
-authorizeUrl: "https://accounts.google.com/o/oauth2/auth"
-
-# URL to get a token from
-# leave as is unless Google instructs you otherwise
-#
-# kube-apiserver 1.10+
-# the OpenID Connect authenticator no longer accepts tokens from the Google v3 token APIs; users must switch to the "https://www.googleapis.com/oauth2/v4/token" endpoint.
-tokenUrl: "https://accounts.google.com/o/oauth2/token"
+# The URL to do discovery on
+providerUrl: "https://accounts.google.com/"
 
 # API Client ID. Get from Google credentials "client_id" field
 clientId: "12345678901234567890.apps.googleusercontent.com"

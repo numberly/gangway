@@ -36,8 +36,7 @@ A typical gangway config for Auth0:
 
 ```yaml
 clusterName: "YourCluster"
-authorizeURL: "https://example.auth0.com/authorize"
-tokenURL: "https://example.auth0.com/oauth/token"
+providerURL: "https://example.auth0.com"
 clientID: "<your client ID>"
 clientSecret: "<your client secret>"
 audience: "https://example.auth0.com/userinfo"
