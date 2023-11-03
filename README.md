@@ -1,6 +1,8 @@
 # Welcome to Numberly/Gangway a new fork with multi-cluster improvements
 
-... which was EOL-ed by VMware. See https://github.com/vmware-archive/gangway for the original.
+Gangway is EOL but still used at Numberly, we decided to fork and maintain it.
+
+See the original repository : https://github.com/vmware-archive/gangway
 
 This fork aims to continue development of Gangway by Numberly corporation.
 
