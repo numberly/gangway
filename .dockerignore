@@ -1,0 +1,7 @@
+.git
+.github
+.idea
+assets/prism-*
+assets/materialize*
+docs
+*.md
