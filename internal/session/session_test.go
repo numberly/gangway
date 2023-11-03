@@ -24,7 +24,7 @@ import (
 )
 
 func TestGenerateSessionKeys(t *testing.T) {
-	b1, b2 := generateSessionKeys("testing")
+	b1, b2 := generateSessionKeys("testing", "0123456789")
 
 	if len(b1) != 64 || len(b2) != 32 {
 		t.Errorf("Wrong byte length's returned")
@@ -33,7 +33,7 @@ func TestGenerateSessionKeys(t *testing.T) {
 }
 
 func TestInitSessionStore(t *testing.T) {
-	s := New("testing")
+	s := New("testing", "0123456789")
 	if s.Session == nil {
 		t.Errorf("Session Store is nil. Did not get initialized")
 		return
@@ -42,7 +42,7 @@ func TestInitSessionStore(t *testing.T) {
 }
 
 func TestCleanupSession(t *testing.T) {
-	s := New("testing")
+	s := New("testing", "0123456789")
 	session := &sessions.Session{}
 	// create a test http server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
