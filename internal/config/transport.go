@@ -16,7 +16,6 @@ package config
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -29,21 +28,15 @@ type TransportConfig struct {
 }
 
 // NewTransportConfig returns a TransportConfig with configured httpClient
-func NewTransportConfig(trustedCAPath string) *TransportConfig {
+func NewTransportConfig(trustedCA []byte) *TransportConfig {
 	rootCAs, _ := x509.SystemCertPool()
 	if rootCAs == nil {
 		rootCAs = x509.NewCertPool()
 	}
 
-	if trustedCAPath != "" {
-		// Read in the cert file
-		certs, err := ioutil.ReadFile(trustedCAPath)
-		if err != nil {
-			log.Fatalf("Failed to append %q to RootCAs: %v", trustedCAPath, err)
-		}
-
+	if len(trustedCA) > 0 {
 		// Append our cert to the system pool
-		if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+		if ok := rootCAs.AppendCertsFromPEM(trustedCA); !ok {
 			log.Println("No certs appended, using system certs only")
 		}
 	}
@@ -56,14 +49,14 @@ func NewTransportConfig(trustedCAPath string) *TransportConfig {
 			KeepAlive: 30 * time.Second,
 			DualStack: true,
 		}).DialContext,
+		ForceAttemptHTTP2:     true,
 		MaxIdleConns:          100,
 		IdleConnTimeout:       90 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 		TLSClientConfig: &tls.Config{
-			RootCAs:                  rootCAs,
-			PreferServerCipherSuites: true,
-			MinVersion:               tls.VersionTLS12,
+			RootCAs:    rootCAs,
+			MinVersion: tls.VersionTLS12,
 		},
 	}
 
