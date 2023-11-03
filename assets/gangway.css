@@ -1,0 +1,74 @@
+h1.header {
+    margin-top:1.6em;
+}
+
+pre {
+    overflow:auto;
+    margin:0;
+    padding:.66em 0;
+}
+textarea.visually-hidden {
+    position:absolute;
+    left:-100%;
+}
+
+h5 {
+    margin-top:1.6em
+}
+.tabs .tab a{
+    color:#00A6B6 ;
+}
+
+.tabs .tab a.active, .tabs .tab a:focus, .tabs .tab a:focus.active {
+    background-color:rgb(249, 252, 255);
+    color:#00A6B6;
+}
+
+.tabs .tab a:hover {
+    color:#00A6B6 ;
+    background-color:transparent;
+}
+
+.tabs .indicator {
+    background-color:#00A6B6; /* .blue.lighten-2 */
+}
+
+/* Pour positionner et dimensionner le logo */
+.nav-wrapper .brand-logo img {
+    height: 50px; /* ou toute autre hauteur appropriée */
+    vertical-align: middle; /* pour aligner verticalement si nécessaire */
+}
+
+/* Pour s'assurer que le logo est bien centré ou à la position souhaitée */
+.brand-logo {
+    display: flex;
+    align-items: center;
+}
+
+.brand-logo img {
+    margin-right: 15px;
+}
+
+.custom-nav {
+    background-color: #1d7cb3;
+}
+
+.custom-nav .brand-logo {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.custom-nav .brand-logo img {
+    margin-right: 10px; /* Ajustez l'espacement selon vos besoins */
+}
+
+/* CSS personnalisé pour les boutons de cluster */
+.btn-cluster {
+    background-color: #00A6B6;
+}
+
+/* Change la couleur au survol */
+.btn-cluster:hover {
+    background-color: #0097a7;
+}
