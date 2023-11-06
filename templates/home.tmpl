@@ -3,25 +3,65 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>{{ .ClusterName }} - Login</title>
+    <title>Select a Cluster - Login</title>
     <base href="{{ .HTTPPath }}/">
     <link type="text/css" rel="stylesheet" href="assets/materialize.min.css"  media="screen"/>
     <link type="text/css" rel="stylesheet" href="assets/gangway.css" media="screen"/>
+    <style>
+        /* Ajout de marges supplémentaires entre les cartes */
+        .cluster-card {
+            margin: 10px;
+        }
+        /* Ajuster le padding au besoin pour une meilleure apparence */
+        .card-content {
+            padding: 20px;
+        }
+        /* S'assurer que les cartes prennent toute la largeur pour un seul élément dans une rangée */
+        .cluster-row > .col {
+            flex: 1;
+        }
+        /* Ajouter une marge autour de la rangée pour un espacement externe */
+        .cluster-row {
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
-<nav class="light-blue blue">
+<nav class="custom-nav">
     <div class="nav-wrapper container">
-        <a href="#" class="brand-logo">gangway</a>
+        <a href="#" class="brand-logo">
+            <img src="https://numberly.com/assets/numberly-logo.39674eaa.svg" alt="Numberly Logo" style="vertical-align: middle; height: 50px; margin-right: 15px;">
+            gangway
+        </a>
     </div>
 </nav>
 
 <div class="container">
-    <h1 class="center header">Gangway Kubernetes Authentication</h1>
-    <p class="flow-text center">This utility will help you authenticate with the <strong>{{ .ClusterName }}</strong>
-        Kubernetes cluster using an OpenID Connect (OIDC) flow. Sign in to get started.</p>
-    <p class="center">
-        <a href="{{ .HTTPPath }}/login" class="waves-effect waves-light btn-large blue">Sign in</a>
-    </p>
+    <h1 class="center header">Select a Cluster to Authenticate</h1>
+    <p class="flow-text center">Choose a Kubernetes cluster to authenticate using the OpenID Connect (OIDC) flow.</p>
+    
+    <!-- Boucle pour afficher tous les clusters disponibles par environnement -->
+    {{ range $env, $clusters := .Clusters }}
+        <div class="cluster-row row"> <!-- Chaque environnement démarre une nouvelle rangée -->
+            <div class="col s12">
+                <div class="card cluster-card"> <!-- Conteneur de la carte avec marge supplémentaire -->
+                    <div class="card-content">
+                        <span class="card-title">{{ $env }}</span>
+                        <div class="row">
+                            <!-- Inner loop for the clusters -->
+                            {{ range $clusters }}
+                                <div class="col">
+                                    <p class="center">
+                                        <a href="{{ $.HTTPPath }}/login?cluster={{ .ClusterName }}" class="waves-effect waves-light btn btn-cluster">{{ .ClusterName }}</a>
+                                    </p>
+                                </div>
+                            {{ end }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {{ end }}
 </div>
 
 <script type="text/javascript" src="assets/materialize.min.js"></script>
