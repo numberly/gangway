@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/coreos/go-oidc/v3 v3.7.0
+	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.2.1
 	github.com/kelseyhightower/envconfig v1.4.0
