@@ -20,11 +20,20 @@ Gangway allows users to self-configure their `kubectl` configuration in a few sh
 
 Once authenticated for one of your cluster : 
 
-![gangway](docs/images/screenshot.png)
+![gangway](docs/images/gangway.png)
 
 ## Deployment
 
 Instructions for deploying gangway for common cloud providers can be found [here](docs/README.md).
+
+We can use our dedicated helm chart that will allow you to configure Gangway easily [here](chart/README.md)
+
+## The multi-cluster way
+
+At Numberly, initially, we was deploying 1 gangway per cluster which could lead to a lot of WebUI to connect
+our clusters. One of the goal of the fork was also to permit to Gangway to manage any clusters to facilitate
+our management. Gangway can now take a configuration with environment and a list of cluster for each environments.
+You can read more about it [here](docs/configuration.md)
 
 ## How It Works
 
