@@ -162,7 +162,7 @@ func clustersHome(w http.ResponseWriter, _ *http.Request) {
 		HTTPPath: clusterCfg.HTTPPath,
 	}
 
-	serveTemplate("clustersHome.tmpl", data, w)
+	serveTemplate("home.tmpl", data, w)
 }
 
 // Handler pour le login.

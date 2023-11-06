@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/numberly/gangway/assets"
 	"github.com/numberly/gangway/internal/config"
@@ -89,18 +90,20 @@ func main() {
 	store = sessions.NewCookieStore([]byte(clusterCfg.SessionSecurityKey))
 	sessionManager = session.New(clusterCfg.SessionSecurityKey, clusterCfg.SessionSalt)
 
-	http.HandleFunc(clusterCfg.GetRootPathPrefix(), httpLogger(rootPathHandler(clustersHome)))
-	http.HandleFunc(fmt.Sprintf("%s/login", clusterCfg.HTTPPath), httpLogger(loginHandler))
-	http.HandleFunc(fmt.Sprintf("%s/callback", clusterCfg.HTTPPath), httpLogger(callbackHandler))
+	r := mux.NewRouter()
+
+	r.HandleFunc(clusterCfg.GetRootPathPrefix(), httpLogger(rootPathHandler(clustersHome))).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("%s/login", clusterCfg.HTTPPath), httpLogger(loginHandler)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("%s/callback", clusterCfg.HTTPPath), httpLogger(callbackHandler)).Methods("GET")
 
 	// middleware'd routes
-	http.Handle(fmt.Sprintf("%s/logout", clusterCfg.HTTPPath), loginRequired(http.HandlerFunc(logoutHandler)))
-	http.Handle(fmt.Sprintf("%s/commandline", clusterCfg.HTTPPath), loginRequired(http.HandlerFunc(commandlineHandler)))
-	http.Handle(fmt.Sprintf("%s/kubeconf", clusterCfg.HTTPPath), loginRequired(http.HandlerFunc(kubeConfigHandler)))
+	r.Handle(fmt.Sprintf("%s/logout", clusterCfg.HTTPPath), loginRequired(http.HandlerFunc(logoutHandler))).Methods("GET")
+	r.Handle(fmt.Sprintf("%s/commandline", clusterCfg.HTTPPath), loginRequired(http.HandlerFunc(commandlineHandler))).Methods("GET")
+	r.Handle(fmt.Sprintf("%s/kubeconf", clusterCfg.HTTPPath), loginRequired(http.HandlerFunc(kubeConfigHandler))).Methods("GET")
 
 	// assets
 	assetsPath := fmt.Sprintf("%s/assets/", clusterCfg.HTTPPath)
-	http.Handle(assetsPath, http.StripPrefix(assetsPath, http.FileServer(assetFs)))
+	r.PathPrefix(assetsPath).Handler(http.StripPrefix(assetsPath, http.FileServer(assetFs)))
 
 	bindAddr := fmt.Sprintf("%s:%d", clusterCfg.Host, clusterCfg.Port)
 	// create http server with timeouts
@@ -121,8 +124,6 @@ func main() {
 				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
 				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
 				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
 				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
 				tls.TLS_CHACHA20_POLY1305_SHA256, // TLS 1.3
 				tls.TLS_AES_256_GCM_SHA384,       // TLS 1.3
