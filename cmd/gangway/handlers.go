@@ -57,7 +57,7 @@ type clusterHomeInfo struct {
 	HTTPPath string
 }
 
-func serveTemplate(tmplFile string, data interface{}, w http.ResponseWriter) {
+func serveTemplate(tmplFile string, data interface{}, w http.ResponseWriter) error {
 	var (
 		templatePath string
 		templateData []byte
@@ -75,7 +75,7 @@ func serveTemplate(tmplFile string, data interface{}, w http.ResponseWriter) {
 	if err != nil {
 		log.Errorf("Failed to find template asset: %s at path: %s", tmplFile, templatePath)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	tmpl := htmltemplate.New(tmplFile).Funcs(FuncMap())
@@ -88,6 +88,7 @@ func serveTemplate(tmplFile string, data interface{}, w http.ResponseWriter) {
 	if err != nil {
 		log.Errorf("Failed to render template %s: %s", tmplFile, err)
 	}
+	return nil
 }
 
 func generateKubeConfig(cfg *userInfo) clientcmdapi.Config {
@@ -162,7 +163,22 @@ func clustersHome(w http.ResponseWriter, _ *http.Request) {
 		HTTPPath: clusterCfg.HTTPPath,
 	}
 
-	serveTemplate("clustersHome.tmpl", data, w)
+	_ = serveTemplate("clustersHome.tmpl", data, w)
+}
+
+func clustersHomeCheck(w http.ResponseWriter, _ *http.Request) (int, error) {
+	data := &clusterHomeInfo{
+		Clusters: clusterCfg.Clusters,
+		HTTPPath: clusterCfg.HTTPPath,
+	}
+
+	_ = serveTemplate("clustersHome.tmpl", data, w)
+
+	// Serve the template and handle any errors
+	if err := serveTemplate("clustersHome.tmpl", data, w); err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return http.StatusOK, nil
 }
 
 // Handler pour le login.
@@ -327,7 +343,7 @@ func commandlineHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serveTemplate("commandline.tmpl", info, w)
+	_ = serveTemplate("commandline.tmpl", info, w)
 }
 
 func kubeConfigHandler(w http.ResponseWriter, r *http.Request) {
