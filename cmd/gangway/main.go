@@ -90,6 +90,8 @@ func main() {
 	sessionManager = session.New(clusterCfg.SessionSecurityKey, clusterCfg.SessionSalt)
 
 	http.HandleFunc(clusterCfg.GetRootPathPrefix(), httpLogger(rootPathHandler(clustersHome)))
+	http.HandleFunc(fmt.Sprintf("%s/api/ready", clusterCfg.HTTPPath), httpLogger(readinessHandler))
+	http.HandleFunc(fmt.Sprintf("%s/api/health", clusterCfg.HTTPPath), httpLogger(livenessHandler))
 	http.HandleFunc(fmt.Sprintf("%s/login", clusterCfg.HTTPPath), httpLogger(loginHandler))
 	http.HandleFunc(fmt.Sprintf("%s/callback", clusterCfg.HTTPPath), httpLogger(callbackHandler))
 
