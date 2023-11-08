@@ -26,9 +26,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/numberly/gangway/internal/config"
 	"github.com/numberly/gangway/internal/jwt"
+	"github.com/numberly/gangway/internal/oidconfig"
 	"github.com/numberly/gangway/templates"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -193,34 +193,18 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Obtain the cluster configuration based on the cluster name.
-	clusterConfig, ok := getClusterConfig(clusterName)
+	oidcProvider, ok := oidconfig.GetOIDCProviderConfig(clusterName)
 	if !ok {
-		// If the cluster name is not valid, return an error.
-		http.Error(w, "Invalid cluster name", http.StatusBadRequest)
-		return
-	}
-
-	// Create a new OIDC provider using the cluster provider URL.
-	ctx := context.Background()
-	provider, err := oidc.NewProvider(ctx, clusterConfig.ProviderURL)
-	if err != nil {
-		log.Errorf("Could not create OIDC provider for cluster %s: %s", clusterName, err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Errorf("Can't get OIDC Provider for clusterName: %s", clusterName)
+		http.Error(w, "Can't get OIDC Provider for clusterName", http.StatusBadRequest)
 		return
 	}
 
 	// Create an OIDC verifier to ensure that the received tokens are valid.
-	verifier = provider.Verifier(&oidc.Config{ClientID: clusterConfig.ClientID})
+	verifier = oidcProvider.Verifier
 
 	// Configure the OAuth2 client with the cluster information.
-	oauth2Cfg = &oauth2.Config{
-		ClientID:     clusterConfig.ClientID,
-		ClientSecret: clusterConfig.ClientSecret,
-		RedirectURL:  clusterConfig.RedirectURL,
-		Scopes:       clusterConfig.Scopes,
-		Endpoint:     provider.Endpoint(),
-	}
+	oauth2Cfg = oidcProvider.OAuth2Config
 
 	// Generate a random state for the OAuth request and store it in the session.
 	stateBytes := make([]byte, 32)
@@ -259,18 +243,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     "auth_token",
-		Value:    "",
-		Path:     "/",
-		Expires:  time.Unix(0, 0),
-		HttpOnly: true,
-		Secure:   true,
-	})
+	clearCookies(w)
 	http.Redirect(w, r, clusterCfg.GetRootPathPrefix(), http.StatusSeeOther)
 }
 
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
+	clearCookies(w)
 	ctx := context.WithValue(r.Context(), oauth2.HTTPClient, transportConfig.HTTPClient)
 
 	// Retrieve the JWT from the cookie.
@@ -287,9 +265,22 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	oidcProvider, ok := oidconfig.GetOIDCProviderConfig(claims.ClusterName)
+	if !ok {
+		http.Error(w, "Can't get OIDC Provider for clusterName", http.StatusBadRequest)
+		return
+	}
+
+	// Create an OIDC verifier to ensure that the received tokens are valid.
+	verifier = oidcProvider.Verifier
+
+	// Configure the OAuth2 client with the cluster information.
+	oauth2Cfg = oidcProvider.OAuth2Config
+
 	// Check the state for a match.
 	state := r.URL.Query().Get("state")
 	if state != claims.OAuth2State {
+		log.Error("State has changed between session")
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return
 	}
@@ -467,4 +458,15 @@ func getClusterConfig(clusterName string) (config.Config, bool) {
 		}
 	}
 	return config.Config{}, false
+}
+
+func clearCookies(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+		Secure:   true,
+	})
 }
