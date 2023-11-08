@@ -26,10 +26,8 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/gorilla/sessions"
 	"github.com/numberly/gangway/assets"
 	"github.com/numberly/gangway/internal/config"
-	"github.com/numberly/gangway/internal/session"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -37,11 +35,6 @@ import (
 var clusterCfg *config.MultiClusterConfig
 var cfg *config.Config
 var oauth2Cfg *oauth2.Config
-
-var store *sessions.CookieStore
-
-var sessionManager *session.Session
-
 var transportConfig *config.TransportConfig
 var provider *oidc.Provider
 var verifier *oidc.IDTokenVerifier
@@ -85,9 +78,6 @@ func main() {
 	} else {
 		assetFs = http.FS(assets.FS)
 	}
-
-	store = sessions.NewCookieStore([]byte(clusterCfg.SessionSecurityKey))
-	sessionManager = session.New(clusterCfg.SessionSecurityKey, clusterCfg.SessionSalt)
 
 	http.HandleFunc(clusterCfg.GetRootPathPrefix(), httpLogger(rootPathHandler(clustersHome)))
 	http.HandleFunc(fmt.Sprintf("%s/api/ready", clusterCfg.HTTPPath), httpLogger(readinessHandler))
