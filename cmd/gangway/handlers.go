@@ -24,9 +24,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/numberly/gangway/internal/config"
+	"github.com/numberly/gangway/internal/jwt"
+	"github.com/numberly/gangway/internal/oidconfig"
 	"github.com/numberly/gangway/templates"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -139,20 +141,20 @@ func generateKubeConfig(cfg *userInfo) clientcmdapi.Config {
 
 func loginRequired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gangwayIdTokenSess, err := sessionManager.Session.Get(r, "gangway_id_token")
+		cookie, err := r.Cookie("auth_token")
 		if err != nil {
-			log.Errorf("Unable to get session : %v", err)
 			http.Redirect(w, r, clusterCfg.GetRootPathPrefix(), http.StatusTemporaryRedirect)
 			return
 		}
 
-		if gangwayIdTokenSess.Values["id_token"] == nil {
-			log.Error("id_token is nil")
+		claims, err := jwt.ValidateToken(cookie.Value, *clusterCfg)
+		if err != nil {
 			http.Redirect(w, r, clusterCfg.GetRootPathPrefix(), http.StatusTemporaryRedirect)
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		ctx := context.WithValue(r.Context(), "claims", claims)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -183,44 +185,28 @@ func clustersHomeCheck(w http.ResponseWriter, _ *http.Request) (int, error) {
 
 // Handler pour le login.
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	// Récupère le nom du cluster à partir de la requête.
+	// Retrieve the cluster name from the request.
 	clusterName := r.URL.Query().Get("cluster")
 	if clusterName == "" {
-		// Si aucun cluster n'est spécifié, redirigez vers la page de sélection du cluster.
+		// If no cluster is specified, redirect to the cluster selection page.
 		http.Redirect(w, r, clusterCfg.GetRootPathPrefix(), http.StatusSeeOther)
 		return
 	}
 
-	// Obtenez la configuration du cluster en fonction du nom du cluster.
-	clusterConfig, ok := getClusterConfig(clusterName)
+	oidcProvider, ok := oidconfig.GetOIDCProviderConfig(clusterName)
 	if !ok {
-		// Si le nom du cluster n'est pas valide, renvoyez une erreur.
-		http.Error(w, "Invalid cluster name", http.StatusBadRequest)
+		log.Errorf("Can't get OIDC Provider for clusterName: %s", clusterName)
+		http.Error(w, "Can't get OIDC Provider for clusterName", http.StatusBadRequest)
 		return
 	}
 
-	// Créez un nouveau fournisseur OIDC en utilisant l'URL du fournisseur du cluster.
-	ctx := context.Background()
-	provider, err := oidc.NewProvider(ctx, clusterConfig.ProviderURL)
-	if err != nil {
-		log.Errorf("Could not create OIDC provider for cluster %s: %s", clusterName, err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	// Create an OIDC verifier to ensure that the received tokens are valid.
+	verifier = oidcProvider.Verifier
 
-	// Créer un vérificateur OIDC pour s'assurer que les tokens reçus sont valides.
-	verifier = provider.Verifier(&oidc.Config{ClientID: clusterConfig.ClientID})
+	// Configure the OAuth2 client with the cluster information.
+	oauth2Cfg = oidcProvider.OAuth2Config
 
-	// Configurer le client OAuth2 avec les informations du cluster.
-	oauth2Cfg = &oauth2.Config{
-		ClientID:     clusterConfig.ClientID,
-		ClientSecret: clusterConfig.ClientSecret,
-		RedirectURL:  clusterConfig.RedirectURL,
-		Scopes:       clusterConfig.Scopes,
-		Endpoint:     provider.Endpoint(),
-	}
-
-	// Générer un état aléatoire pour la requête OAuth et le stocker dans la session.
+	// Generate a random state for the OAuth request and store it in the session.
 	stateBytes := make([]byte, 32)
 	if _, err := rand.Read(stateBytes); err != nil {
 		log.Errorf("failed to generate random data: %s", err)
@@ -229,63 +215,77 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	state := base64.URLEncoding.EncodeToString(stateBytes)
 
-	// Utiliser initSession pour initialiser la session.
-	gangwaySess, err := sessionManager.Session.Get(r, "gangway")
+	// Create a JWT with the cluster name and OAuth state.
+	signedToken, err := jwt.CreateToken(clusterName, state, *clusterCfg)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-	gangwaySess.Values["state"] = state
-	gangwaySess.Values["clusterName"] = clusterName
-	err = gangwaySess.Save(r, w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 
-	// Construit l'URL d'authentification et redirige le client vers le fournisseur OIDC.
+	// Set the JWT as a secure, HttpOnly cookie.
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    signedToken,
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/",
+		Expires:  time.Now().Add(1 * time.Hour),
+	})
+
+	// Construct the authentication URL and redirect the client to the OIDC provider.
 	authURL := oauth2Cfg.AuthCodeURL(
 		state,
-		oauth2.AccessTypeOffline, // Pour demander un token d'actualisation.
-		oauth2.SetAuthURLParam("prompt", "consent"), // Forcer l'utilisateur à donner son consentement.
+		oauth2.AccessTypeOffline, // To request a refresh token.
+		oauth2.SetAuthURLParam("prompt", "consent"), // Force the user to give consent.
 	)
+
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
-
-	sessionManager.Cleanup(w, r, "gangway")
-	sessionManager.Cleanup(w, r, "gangway_id_token")
-	sessionManager.Cleanup(w, r, "gangway_refresh_token")
-
-	// Redirection après logout.
+	clearCookies(w)
 	http.Redirect(w, r, clusterCfg.GetRootPathPrefix(), http.StatusSeeOther)
 }
 
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
+	clearCookies(w)
 	ctx := context.WithValue(r.Context(), oauth2.HTTPClient, transportConfig.HTTPClient)
 
-	// Charger la session principale.
-	session, err := sessionManager.Session.Get(r, "gangway")
+	// Retrieve the JWT from the cookie.
+	cookie, err := r.Cookie("auth_token")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "No auth token present", http.StatusUnauthorized)
 		return
 	}
 
-	// Vérifier le nom du cluster dans la session.
-	clusterName, ok := session.Values["clusterName"].(string)
-	if !ok || clusterName == "" {
-		http.Error(w, "Internal error: clusterName not found", http.StatusInternalServerError)
+	// Validate the JWT.
+	claims, err := jwt.ValidateToken(cookie.Value, *clusterCfg)
+	if err != nil {
+		http.Error(w, "Invalid auth token", http.StatusUnauthorized)
 		return
 	}
 
-	// Vérifier la concordance de l'état.
+	oidcProvider, ok := oidconfig.GetOIDCProviderConfig(claims.ClusterName)
+	if !ok {
+		http.Error(w, "Can't get OIDC Provider for clusterName", http.StatusBadRequest)
+		return
+	}
+
+	// Create an OIDC verifier to ensure that the received tokens are valid.
+	verifier = oidcProvider.Verifier
+
+	// Configure the OAuth2 client with the cluster information.
+	oauth2Cfg = oidcProvider.OAuth2Config
+
+	// Check the state for a match.
 	state := r.URL.Query().Get("state")
-	if state != session.Values["state"] {
+	if state != claims.OAuth2State {
+		log.Error("State has changed between session")
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return
 	}
 
-	// Utiliser le code d'accès pour récupérer un token.
+	// Use the access code to retrieve a token.
 	code := r.URL.Query().Get("code")
 	oauth2Token, err := oauth2Cfg.Exchange(ctx, code)
 	if err != nil {
@@ -294,7 +294,7 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extraire le ID token et vérifier sa validité.
+	// Extract the ID token and verify its validity.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
 		log.Errorf("no id_token found")
@@ -309,30 +309,25 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gangwayIdTokenSess, err := sessionManager.Session.Get(r, "gangway_id_token")
+	// Create a new JWT with the ID token and refresh token.
+	signedToken, err := jwt.UpdateToken(cookie.Value, rawIDToken, oauth2Token.RefreshToken, *clusterCfg)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to update auth token", http.StatusInternalServerError)
 		return
 	}
-	gangwayIdTokenSess.Values["id_token"] = rawIDToken
-	err = gangwayIdTokenSess.Save(r, w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 
-	gangwayRefreshTokenSess, err := sessionManager.Session.Get(r, "gangway_refresh_token")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	gangwayRefreshTokenSess.Values["refresh_token"] = oauth2Token.RefreshToken
-	err = gangwayRefreshTokenSess.Save(r, w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	// Send the new JWT to the client.
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    signedToken,
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/",
+		Expires:  time.Now().Add(1 * time.Hour),
+	})
 
-	// Rediriger vers la page de ligne de commande avec le nom du cluster comme paramètre.
-	http.Redirect(w, r, fmt.Sprintf("%s/commandline?cluster=%s", clusterCfg.HTTPPath, clusterName), http.StatusSeeOther)
+	// Redirect to the command line page with the cluster name as a parameter.
+	http.Redirect(w, r, fmt.Sprintf("%s/commandline?cluster=%s", clusterCfg.HTTPPath, claims.ClusterName), http.StatusSeeOther)
 }
 
 func commandlineHandler(w http.ResponseWriter, r *http.Request) {
@@ -370,34 +365,22 @@ func kubeConfigHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func generateInfo(w http.ResponseWriter, r *http.Request) *userInfo {
-	// Load the session.
-	sessionIdToken, err := sessionManager.Session.Get(r, "gangway_id_token")
+	// Retrieve the JWT from the cookie.
+	cookie, err := r.Cookie("auth_token")
 	if err != nil {
-		log.Errorf("Error retrieving session: %v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, "No auth token present", http.StatusUnauthorized)
 		return nil
 	}
 
-	rawIDToken, ok := sessionIdToken.Values["id_token"].(string)
-	if !ok {
-		log.Errorf("id_token is not OK : %v", ok)
-		http.Redirect(w, r, clusterCfg.GetRootPathPrefix()+"/login", http.StatusSeeOther)
-		return nil
-	}
-
-	sessionRefreshToken, err := sessionManager.Session.Get(r, "gangway_refresh_token")
+	// Validate the JWT.
+	claimsJwt, err := jwt.ValidateToken(cookie.Value, *clusterCfg)
 	if err != nil {
-		log.Errorf("Error retrieving session: %v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, "Invalid auth token", http.StatusUnauthorized)
 		return nil
 	}
 
-	refreshToken, ok := sessionRefreshToken.Values["refresh_token"].(string)
-	if !ok {
-		log.Errorf("refresh_token is not OK : %v", ok)
-		http.Redirect(w, r, clusterCfg.GetRootPathPrefix()+"/login", http.StatusSeeOther)
-		return nil
-	}
+	rawIDToken := claimsJwt.OAuth2TokenId
+	refreshToken := claimsJwt.OAuth2RefreshId
 
 	ctx := context.WithValue(r.Context(), oauth2.HTTPClient, transportConfig.HTTPClient)
 
@@ -475,4 +458,15 @@ func getClusterConfig(clusterName string) (config.Config, bool) {
 		}
 	}
 	return config.Config{}, false
+}
+
+func clearCookies(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+		Secure:   true,
+	})
 }
