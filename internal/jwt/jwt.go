@@ -77,7 +77,7 @@ func ValidateToken(signedToken string, clusterCfg config.MultiClusterConfig) (*E
 func UpdateToken(signedToken string, tokenId string, refreshTokenId string, clusterCfg config.MultiClusterConfig) (string, error) {
 	// Parse the token
 	token, err := jwt.ParseWithClaims(signedToken, &ExtendedClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte("YourSecretKey"), nil
+		return []byte(clusterCfg.SessionSecurityKey), nil
 	})
 	if err != nil {
 		log.Errorf("failed to parse token: %v", err)
