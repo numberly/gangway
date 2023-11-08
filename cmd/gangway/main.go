@@ -28,6 +28,7 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/numberly/gangway/assets"
 	"github.com/numberly/gangway/internal/config"
+	"github.com/numberly/gangway/internal/oidconfig"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -58,7 +59,6 @@ func rootPathHandler(fn http.HandlerFunc) http.HandlerFunc {
 		fn(w, r)
 	}
 }
-
 func main() {
 	clusterCfgile := flag.String("config", "", "The config file to use.")
 	flag.Parse()
@@ -66,11 +66,17 @@ func main() {
 	var err error
 	clusterCfg, err = config.NewMultiClusterConfig(*clusterCfgile)
 	if err != nil {
-		log.Errorf("Could not parse config file: %s", err)
+		log.Fatalf("Could not parse config file: %s", err)
 		os.Exit(1)
 	}
 
 	transportConfig = config.NewTransportConfig(clusterCfg.TrustedCA)
+
+	err = oidconfig.InitOIDCProviders(*clusterCfg)
+	if err != nil {
+		log.Fatalf("Could not initialize oidc providers: %s", err)
+		os.Exit(1)
+	}
 
 	var assetFs http.FileSystem
 	if clusterCfg.CustomAssetsDir != "" {
