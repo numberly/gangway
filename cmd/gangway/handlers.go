@@ -141,14 +141,13 @@ func generateKubeConfig(cfg *userInfo) clientcmdapi.Config {
 
 func loginRequired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenString := r.Header.Get("Authorization")
-		if tokenString == "" {
+		cookie, err := r.Cookie("auth_token")
+		if err != nil {
 			http.Redirect(w, r, clusterCfg.GetRootPathPrefix(), http.StatusTemporaryRedirect)
 			return
 		}
 
-		// Valider le token
-		claims, err := jwt.ValidateToken(tokenString, *clusterCfg)
+		claims, err := jwt.ValidateToken(cookie.Value, *clusterCfg)
 		if err != nil {
 			http.Redirect(w, r, clusterCfg.GetRootPathPrefix(), http.StatusTemporaryRedirect)
 			return
