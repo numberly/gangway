@@ -56,7 +56,6 @@ func InitOIDCProviders(multiClusterConfig config.MultiClusterConfig) error {
 }
 
 func GetOIDCProviderConfig(clusterName string) (*OIDCProviderConfig, bool) {
-	log.Printf("Voici le contenu de ClusterOIDCConfigs : %v", ClusterOIDCConfigs[clusterName])
 	config, ok := ClusterOIDCConfigs[clusterName]
 	return config, ok
 }
