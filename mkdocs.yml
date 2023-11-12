@@ -43,27 +43,35 @@ markdown_extensions:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
-# nav:
-#   - Home: index.md
-#   - Getting Started:
-#     - getting-started/installation.md
-#     - getting-started/quick-start.md
-#     - getting-started/philosophy.md
-#   - Configuration:
-#     - setup/index.md
-#     - setup/choosing-the-structure.md
-#     - setup/setting-up-languages.md
-#     - setup/translating-content.md
-#     - setup/controlling-your-builds.md
-#     - setup/localizing-navigation.md
-#     - setup/using-i18n-context.md
-#     - setup/using-alternates.md
-#     - setup/upgrading-to-1.md
-#     - Plugins Compatibility:
-#       - setup/setting-up-material.md
-#       - setup/setting-up-search.md
-#       - setup/plugins-compatibility.md
-#   - Changelog: changelog.md
+nav:
+  - Home: index.md
+  - Getting Started:
+    - getting-started/configuration.md
+    - getting-started/deployment.md
+    - getting-started/helm-deployment.md
+    - getting-started/build.md
+    - getting-started/api-flags.md
+  - How it Work:
+    - how-it-work/how-it-work.md
+    - how-it-work/auth0.md
+    - how-it-work/dex.md
+    - how-it-work/google.md
+    - how-it-work/custom-templates.md
+    #- Plugins Compatibility:
+    #  - setup/setting-up-material.md
+    #  - setup/setting-up-search.md
+    #  - setup/plugins-compatibility.md
+  #- Changelog: changelog.md
 
 plugins:
   - search
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: fr
+          name: Français
+          build: true
