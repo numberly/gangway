@@ -9,6 +9,10 @@ Welcome to Numberly/Gangway, a maintained fork of the original Gangway project, 
 - **Multi-Cluster Management**: Manages multiple clusters to reduce complexity.
 - **OIDC Authentication**: Streamlines ID token minting for Kubernetes API server access.
 
+## Documentation
+
+Checkout the [GANGWAY Documentation](https://link-to-doc.numberly.com)
+
 ## Building from Source
 
 Written in Go (83.9%).
