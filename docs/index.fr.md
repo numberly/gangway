@@ -3,7 +3,7 @@
 gangway
 =======
 
-_(nom) : Une ouverture dans le parapet du navire pour permettre aux passagers de monter à bord ou de quitter le navire._
+_(noun): An opening in the bulwark of the ship to allow passengers to board or leave the ship._
 
 Une application qui peut être utilisée pour faciliter les flux d'authentification via OIDC pour un cluster Kubernetes.
 Kubernetes prend en charge les [jetons OpenID Connect](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens) comme moyen d'identifier les utilisateurs qui accèdent au cluster.
