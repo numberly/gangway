@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+        <loc>https://numberly.github.io/gangway/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/getting-started/api-flags/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/getting-started/api-flags/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/getting-started/api-flags/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/getting-started/build/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/getting-started/build/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/getting-started/build/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/getting-started/configuration/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/getting-started/configuration/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/getting-started/configuration/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/getting-started/deployment/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/getting-started/deployment/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/getting-started/deployment/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/getting-started/helm-deployment/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/getting-started/helm-deployment/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/getting-started/helm-deployment/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/how-it-works/auth0/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/how-it-works/auth0/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/how-it-works/auth0/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/how-it-works/custom-templates/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/how-it-works/custom-templates/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/how-it-works/custom-templates/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/how-it-works/dex/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/how-it-works/dex/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/how-it-works/dex/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/how-it-works/google/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/how-it-works/google/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/how-it-works/google/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/how-it-works/how-it-works/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/how-it-works/how-it-works/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/how-it-works/how-it-works/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/fr/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/fr/getting-started/api-flags/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/getting-started/api-flags/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/getting-started/api-flags/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/fr/getting-started/build/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/getting-started/build/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/getting-started/build/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/fr/getting-started/configuration/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/getting-started/configuration/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/getting-started/configuration/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/fr/getting-started/deployment/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/getting-started/deployment/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/getting-started/deployment/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/fr/getting-started/helm-deployment/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/getting-started/helm-deployment/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/getting-started/helm-deployment/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/fr/how-it-works/auth0/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/how-it-works/auth0/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/how-it-works/auth0/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/fr/how-it-works/custom-templates/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/how-it-works/custom-templates/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/how-it-works/custom-templates/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/fr/how-it-works/dex/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/how-it-works/dex/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/how-it-works/dex/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/fr/how-it-works/google/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/how-it-works/google/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/how-it-works/google/"/>
+    </url>
+    <url>
+        <loc>https://numberly.github.io/gangway/fr/how-it-works/how-it-works/</loc>
+        <lastmod>2023-11-13</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://numberly.github.io/gangway/fr/how-it-works/how-it-works/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://numberly.github.io/gangway/how-it-works/how-it-works/"/>
+    </url>
+</urlset>
