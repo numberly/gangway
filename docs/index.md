@@ -1,17 +1,17 @@
-# Documentation de Gangway
+# Gangway documentation
 
 gangway
 =======
 
-_(nom) : Une ouverture dans le parapet du navire pour permettre aux passagers de monter à bord ou de quitter le navire._
+_(noun): An opening in the bulwark of the ship to allow passengers to board or leave the ship._
 
-Une application qui peut être utilisée pour faciliter les flux d'authentification via OIDC pour un cluster Kubernetes.
-Kubernetes prend en charge les [jetons OpenID Connect](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens) comme moyen d'identifier les utilisateurs qui accèdent au cluster.
-Gangway a été amélioré et est maintenant capable de gérer plusieurs clusters.
-Gangway permet aux utilisateurs de configurer eux-mêmes leur configuration `kubectl` en quelques étapes simples.
+An application that can be used to easily enable authentication flows via OIDC for a kubernetes cluster.
+Kubernetes supports [OpenID Connect Tokens](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens) as a way to identify users who access the cluster.
+Gangway has been improved and is now able to handle multiple clusters
+Gangway allows users to self-configure their `kubectl` configuration in a few short steps.
 
 ![gangway multicluster](images/gangway-multicluster.png)
 
-Une fois authentifié pour l'un de vos clusters :
+Once authenticated for one of your cluster : 
 
 ![gangway](images/gangway.png)

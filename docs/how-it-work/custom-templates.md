@@ -1,14 +1,14 @@
-# Modèles Personnalisés
+# Custom Templates
 
-Pour personnaliser les pages HTML rendues par Gangway, vous pouvez fournir un ensemble de modèles personnalisés à utiliser à la place de ceux intégrés.
+To customize the HTML pages rendered by Gangway, you may provide a set of custom templates to use instead of the built-in ones.
 
-:exclamation: **Important : Les données transmises aux modèles peuvent changer entre les versions, et nous ne garantissons pas que nous maintiendrons la compatibilité avec les versions antérieures. Si vous utilisez des modèles personnalisés, une attention particulière doit être portée lors de la mise à niveau de Gangway.**
+:exclamation: **Important: The data passed to the templates might change between versions, and we do not guarantee that we will maintain backwards compatibility. If using custom templates, extra care must be taken when upgrading Gangway.**
 
-Pour activer cette fonctionnalité, définissez l'option `customHTMLTemplatesDir` dans le fichier de configuration de Gangway pour un répertoire qui contient les modèles personnalisés suivants :
+To enable this feature, set the `customHTMLTemplatesDir` option in Gangway's configuration file to a directory that contains the following custom templates:
 
-* home.tmpl : Modèle de la page d'accueil.
-* commandline.tmpl : Modèle post-connexion qui liste généralement les commandes nécessaires pour configurer `kubectl`.
+* home.tmpl: Home page template.
+* commandline.tmpl: Post-login template that typically lists the commands needed to configure `kubectl`.
 
-Les modèles sont traités en utilisant le [package][0] `html/template` de Go.
+The templates are processed using Go's `html/template` [package][0].
 
 [0]: https://golang.org/pkg/html/template/

@@ -1,12 +1,12 @@
-# Déploiement de Gangway
+# Deploying Gangway
 
-Le déploiement de Gangway consiste à écrire un fichier de configuration, puis à déployer le service.
-Le service est sans état, il est donc relativement facile à gérer sur Kubernetes.
-La manière dont vous fournirez l'accès au service dépendra de votre configuration spécifique.
+Deploying Gangway consists of writing a config file and then deploying the service.
+The service is stateless so it is relatively easy to manage on Kubernetes.
+How you provide access to the service is going to be dependent on your specific configuration.
 
-Gangway est maintenant conscient d'une configuration multi-cluster, nous avons développé un chart Helm qui facilitera le déploiement.
+Gangway is now aware of a multi-cluster configuration, we have developped a helm chart that will made deployment easily.
 
-Voici un exemple de configuration :
+Here is a configration example : 
 
 ```yaml
 host: 0.0.0.0
