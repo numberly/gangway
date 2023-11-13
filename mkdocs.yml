@@ -1,0 +1,77 @@
+site_name: Gangway Kubernetes configuration generator documentation
+site_url: https://numberly.github.io/gangway
+repo_url: https://github.com/numberly/gangway
+
+docs_dir: docs/
+
+copyright: Copyright © 2023 Numberly
+
+theme:
+  name: material
+  font: false
+  icon:
+    logo: material/lock
+  palette:
+    primary: blue
+  features:
+    - navigation.expand
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tabs
+    - toc.follow
+    - toc.integrate
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/numberly/gangway
+      name: gangway on Github
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - getting-started/configuration.md
+    - getting-started/deployment.md
+    - getting-started/helm-deployment.md
+    - getting-started/build.md
+    - getting-started/api-flags.md
+  - How it Works:
+    - how-it-works/how-it-works.md
+    - how-it-works/auth0.md
+    - how-it-works/dex.md
+    - how-it-works/google.md
+    - how-it-works/custom-templates.md
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: fr
+          name: Français
+          build: true
+          theme:
+            palette:
+              primary: red
+          nav_translations:
+            Home: Accueil
+            Getting Started: Démarrage Rapide
+            How it Works: Comment ça marche
