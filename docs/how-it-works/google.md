@@ -1,4 +1,4 @@
-# Connecting gangway to Google
+# Connecting Gangway to Google
 It is possible to use Google as an OAuth provider with gangway. To do so follow the instructions below:
 
 ## Setting Up Google OAuth
