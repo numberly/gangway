@@ -1,94 +1,94 @@
-# Configuration du Chart Helm pour Gangway
+# Helm Chart Configuration for Gangway
 
-Ce document décrit les paramètres configurables du chart Helm pour Gangway et leurs valeurs par défaut.
+This document outlines the configurable parameters of the Helm chart for Gangway and their default values.
 
-## Paramètres Globaux
+## Global Parameters
 
-- `global.imageRegistry` : Registre global d'images Docker (par défaut : `""`)
-- `global.imagePullSecrets` : Noms des secrets de registre Docker global sous forme de tableau (par défaut : `[]`)
-- `global.storageClass` : Classe de stockage globale pour le(s) volume(s) persistant(s) (par défaut : `""`)
+- `global.imageRegistry`: Global Docker image registry (default: `""`)
+- `global.imagePullSecrets`: Global Docker registry secret names as an array (default: `[]`)
+- `global.storageClass`: Global StorageClass for Persistent Volume(s) (default: `""`)
 
-## Paramètres Communs
+## Common Parameters
 
-- `kubeVersion` : Forcer la version cible de Kubernetes (par défaut : `""`)
-- `nameOverride` : Chaîne pour remplacer partiellement le modèle `common.names.fullname` (par défaut : `""`)
-- `fullnameOverride` : Chaîne pour remplacer entièrement le modèle `common.names.fullname` (par défaut : `""`)
-- `commonLabels` : Étiquettes à ajouter à tous les objets déployés (par défaut : `{}`)
-- `commonAnnotations` : Annotations à ajouter à tous les objets déployés (par défaut : `{}`)
-- `clusterDomain` : Domaine de cluster Kubernetes par défaut (par défaut : `cluster.local`)
-- `extraDeploy` : Tableau d'objets supplémentaires à déployer avec la release (par défaut : `[]`)
+- `kubeVersion`: Force target Kubernetes version (default: `""`)
+- `nameOverride`: String to partially override `common.names.fullname` template (default: `""`)
+- `fullnameOverride`: String to fully override `common.names.fullname` template (default: `""`)
+- `commonLabels`: Labels to add to all deployed objects (default: `{}`)
+- `commonAnnotations`: Annotations to add to all deployed objects (default: `{}`)
+- `clusterDomain`: Default Kubernetes cluster domain (default: `cluster.local`)
+- `extraDeploy`: Array of extra objects to deploy with the release (default: `[]`)
 
-## Paramètres de l'Image Gangway
+## Gangway Image Parameters
 
-- `image.registry` : Registre d'image Gangway (par défaut : `docker.io`)
-- `image.repository` : Dépôt d'image Gangway (par défaut : `numberlyinfra/gangway`)
-- `image.tag` : Tag de l'image Gangway (par défaut : `master`)
-- `image.digest` : Digest de l'image Gangway (par défaut : `""`)
-- `image.pullPolicy` : Politique de téléchargement de l'image (par défaut : `Always`)
-- `image.pullSecrets` : Spécifier les noms des secrets de registre Docker sous forme de tableau (par défaut : `[]`)
-- `image.debug` : Activer le mode debug de l'image Gangway (par défaut : `false`)
+- `image.registry`: Gangway image registry (default: `docker.io`)
+- `image.repository`: Gangway image repository (default: `numberlyinfra/gangway`)
+- `image.tag`: Gangway image tag (default: `master`)
+- `image.digest`: Gangway image digest (default: `""`)
+- `image.pullPolicy`: Image pull policy (default: `Always`)
+- `image.pullSecrets`: Specify docker-registry secret names as an array (default: `[]`)
+- `image.debug`: Enable Gangway image debug mode (default: `false`)
 
-## Paramètres de Déploiement de Gangway
+## Gangway Deployment Parameters
 
-- `replicaCount` : Nombre de répliques de Gangway à déployer (par défaut : `3`)
-- `updateStrategy.type` : StrategyType peut être défini sur `RollingUpdate` ou `OnDelete` (par défaut : `RollingUpdate`)
-- `podSecurityContext.enabled` : Activer le contexte de sécurité des pods Gangway (par défaut : `true`)
-- `podSecurityContext.fsGroup` : ID de groupe pour les volumes du pod (par défaut : `1001`)
-- `containerSecurityContext.enabled` : Activer le contexte de sécurité des conteneurs Gangway (par défaut : `true`)
-- `containerSecurityContext.runAsUser` : ID utilisateur pour exécuter les conteneurs Gangway (par défaut : `1001`)
-- `containerSecurityContext.runAsNonRoot` : Définir le contexte de sécurité du conteneur Gangway runAsNonRoot (par défaut : `true`)
-- `resources.limits` : Les limites de ressources pour le conteneur Gangway (par défaut : `{}`)
-- `resources.requests` : Les ressources demandées pour le conteneur Gangway (par défaut : `{ memory: "512Mi", cpu: "300m" }`)
+- `replicaCount`: Number of Gangway replicas to deploy (default: `3`)
+- `updateStrategy.type`: StrategyType can be set to `RollingUpdate` or `OnDelete` (default: `RollingUpdate`)
+- `podSecurityContext.enabled`: Enable Gangway pods' Security Context (default: `true`)
+- `podSecurityContext.fsGroup`: Group ID for the volumes of the pod (default: `1001`)
+- `containerSecurityContext.enabled`: Enable Gangway containers' SecurityContext (default: `true`)
+- `containerSecurityContext.runAsUser`: User ID to run Gangway containers (default: `1001`)
+- `containerSecurityContext.runAsNonRoot`: Set Gangway container's Security Context runAsNonRoot (default: `true`)
+- `resources.limits`: The resources limits for the Gangway container (default: `{}`)
+- `resources.requests`: The requested resources for the Gangway container (default: `{ memory: "512Mi", cpu: "300m" }`)
 
 ## Probes
 
-- `startupProbe.enabled` : Activer startupProbe (par défaut : `false`)
-- `livenessProbe.enabled` : Activer livenessProbe (par défaut : `true`)
-- `readinessProbe.enabled` : Activer readinessProbe (par défaut : `true`)
+- `startupProbe.enabled`: Enable startupProbe (default: `false`)
+- `livenessProbe.enabled`: Enable livenessProbe (default: `true`)
+- `readinessProbe.enabled`: Enable readinessProbe (default: `true`)
 
-## Configuration du Service
+## Service Configuration
 
-- `service.type` : Type de service Kubernetes (par défaut : `ClusterIP`)
-- `service.ports.http` : Port HTTP du service (par défaut : `8080`)
-- `service.sessionAffinity` : Affinité de session pour le service Kubernetes (par défaut : `ClientIP`)
+- `service.type`: Kubernetes Service type (default: `ClusterIP`)
+- `service.ports.http`: Service HTTP port (default: `8080`)
+- `service.sessionAffinity`: Session Affinity for Kubernetes service (default: `ClientIP`)
 
-## Configuration de l'Ingress
+## Ingress Configuration
 
-- `ingress.enabled` : Définir sur true pour activer la génération de l'enregistrement d'ingress (par défaut : `false`)
-- `ingress.hostname` : Hôte par défaut pour la ressource ingress (par défaut : `gangway.local`)
-- `ingress.path` : Le chemin vers Gangway (par défaut : `/`)
-- `ingress.annotations` : Annotations supplémentaires pour la ressource Ingress (par défaut : `{}`)
+- `ingress.enabled`: Set to true to enable ingress record generation (default: `false`)
+- `ingress.hostname`: Default host for the ingress resource (default: `gangway.local`)
+- `ingress.path`: The Path to Gangway (default: `/`)
+- `ingress.annotations`: Additional annotations for the Ingress resource (default: `{}`)
 
-## Configuration Supplémentaire
+## Additional Configuration
 
-- `extraEnvVars` : Variables d'environnement supplémentaires à définir sur le conteneur Gangway (par défaut : `[]`)
-- `extraVolumes` : Spécifier éventuellement une liste supplémentaire de volumes pour les pods Gangway (par défaut : `[]`)
-- `extraVolumeMounts` : Spécifier éventuellement une liste supplémentaire de volumeMounts pour le(s) conteneur(s) Gangway (par défaut : `[]`)
+- `extraEnvVars`: Extra environment variables to be set on Gangway container (default: `[]`)
+- `extraVolumes`: Optionally specify extra list of additional volumes for Gangway pods (default: `[]`)
+- `extraVolumeMounts`: Optionally specify extra list of additional volumeMounts for Gangway container(s) (default: `[]`)
 
-## Affinité et Tolérances
+## Affinity and Tolerations
 
-- `podAffinityPreset` : Préréglage d'affinité de pod (par défaut : `""`)
-- `podAntiAffinityPreset` : Préréglage d'anti-affinité de pod (par défaut : `soft`)
-- `nodeAffinityPreset.type` : Type de préréglage d'affinité de nœud (par défaut : `""`)
-- `affinity` : Affinité pour l'assignation de pod (par défaut : `{}`)
-- `nodeSelector` : Étiquettes de nœud pour l'assignation de pod (par défaut : `{}`)
-- `tolerations` : Tolérances pour l'assignation de pod (par défaut : `[]`)
+- `podAffinityPreset`: Pod affinity preset (default: `""`)
+- `podAntiAffinityPreset`: Pod anti-affinity preset (default: `soft`)
+- `nodeAffinityPreset.type`: Node affinity preset type (default: `""`)
+- `affinity`: Affinity for pod assignment (default: `{}`)
+- `nodeSelector`: Node labels for pod assignment (default: `{}`)
+- `tolerations`: Tolerations for pod assignment (default: `[]`)
 
-## Personnalisation
+## Customization
 
-- `command` : Remplacer la commande par défaut du conteneur (par défaut : `[]`)
-- `args` : Remplacer les arguments par défaut du conteneur (par défaut : `[]`)
-- `lifecycleHooks` : pour le(s) conteneur(s) Gangway afin d'automatiser la configuration avant ou après le démarrage (par défaut : `{}`)
-- `extraEnvVarsCM` : Nom du ConfigMap existant contenant des variables d'environnement supplémentaires (par défaut : `""`)
-- `extraEnvVarsSecret` : Nom du Secret existant contenant des variables d'environnement supplémentaires (par défaut : `""`)
+- `command`: Override default container command (default: `[]`)
+- `args`: Override default container args (default: `[]`)
+- `lifecycleHooks`: for the Gangway container(s) to automate configuration before or after startup (default: `{}`)
+- `extraEnvVarsCM`: Name of existing ConfigMap containing extra env vars (default: `""`)
+- `extraEnvVarsSecret`: Name of existing Secret containing extra env vars (default: `""`)
 
-## Session et Configuration
+## Session and Configuration
 
-- `sessionkey` : Clé de session (par défaut : `mySessionKey`)
-- `sessionsalt` : Sel de session (par défaut : `mySessionSalt`)
-- `configuration` : Configuration en ligne pour Gangway (par défaut : `""`)
+- `sessionkey`: Session key (default: `mySessionKey`)
+- `sessionsalt`: Session salt (default: `mySessionSalt`)
+- `configuration`: Inline configuration for Gangway (default: `""`)
 
-## Exemple de configuration : 
+## Example of configuration : 
 ```yaml
 host: 0.0.0.0
 port: 8080
