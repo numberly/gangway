@@ -68,3 +68,10 @@ plugins:
         - locale: fr
           name: Français
           build: true
+          theme:
+            palette:
+              primary: red
+          nav_translations:
+            Home: Accueil
+            Getting Started: Démarrage Rapide
+            How it Works: Comment ça marche
