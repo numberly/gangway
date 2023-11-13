@@ -52,11 +52,11 @@ nav:
     - getting-started/build.md
     - getting-started/api-flags.md
   - How it Work:
-    - how-it-work/how-it-work.md
-    - how-it-work/auth0.md
-    - how-it-work/dex.md
-    - how-it-work/google.md
-    - how-it-work/custom-templates.md
+    - how-it-works/how-it-work.md
+    - how-it-works/auth0.md
+    - how-it-works/dex.md
+    - how-it-works/google.md
+    - how-it-works/custom-templates.md
     #- Plugins Compatibility:
     #  - setup/setting-up-material.md
     #  - setup/setting-up-search.md
