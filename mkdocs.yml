@@ -9,9 +9,8 @@ copyright: Copyright © 2023 Numberly
 theme:
   name: material
   font: false
-  # custom_dir: docs/overrides
-  # logo:
-  #   assets/logo_by_maxicons.png
+  icon:
+    logo: material/lock
   palette:
     primary: blue
   features:
