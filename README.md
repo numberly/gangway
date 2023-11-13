@@ -11,7 +11,7 @@ Welcome to Numberly/Gangway, a maintained fork of the original Gangway project, 
 
 ## Documentation
 
-Checkout the [GANGWAY Documentation](https://link-to-doc.numberly.com)
+Checkout the [GANGWAY Documentation](https://numberly.github.io/gangway/)
 
 ## Building from Source
 
