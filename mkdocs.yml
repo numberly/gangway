@@ -3,7 +3,6 @@ site_url: https://numberly.github.io/gangway
 repo_url: https://github.com/numberly/gangway
 
 docs_dir: docs/
-# exclude_docs: overrides/
 
 copyright: Copyright © 2023 Numberly
 
@@ -57,11 +56,6 @@ nav:
     - how-it-works/dex.md
     - how-it-works/google.md
     - how-it-works/custom-templates.md
-    #- Plugins Compatibility:
-    #  - setup/setting-up-material.md
-    #  - setup/setting-up-search.md
-    #  - setup/plugins-compatibility.md
-  #- Changelog: changelog.md
 
 plugins:
   - search
