@@ -51,7 +51,7 @@ nav:
     - getting-started/helm-deployment.md
     - getting-started/build.md
     - getting-started/api-flags.md
-  - How it Work:
+  - How it Works:
     - how-it-works/how-it-works.md
     - how-it-works/auth0.md
     - how-it-works/dex.md
